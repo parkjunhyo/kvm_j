@@ -1,0 +1,4 @@
+root rootsize
+swap swapsize
+---
+/var varsize
