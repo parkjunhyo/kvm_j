@@ -32,8 +32,6 @@ fi
 mkdir -p $GUEST_DIR/mytemplates/libvirt
 cp /etc/vmbuilder/libvirt/* $GUEST_DIR/mytemplates/libvirt
 
-## First boot Shell script configuration
-cp $working_directory/boot.sh $GUEST_DIR
 ## Create Hardisk Volume information
 ROOTVOL=${ROOTVOL:='8000'}
 SWAPVOL=${SWAPVOL:='4000'}
