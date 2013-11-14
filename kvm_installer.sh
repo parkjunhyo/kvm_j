@@ -13,7 +13,7 @@ then
 fi
 
 ## Installation KVM Packages
-apt-get install -y git ubuntu-virt-server python-vm-builder kvm-ipxe
+apt-get install -y git ubuntu-virt-server python-vm-builder kvm-ipxe lvm2
 ## Installation IP address calculation
 apt-get install -y sipcalc ipcalc
 
