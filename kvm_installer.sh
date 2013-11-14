@@ -78,9 +78,16 @@ fi
 if [[ ! `ip link show | grep -i 'ovsbr_int'` ]]
 then
  ovs-vsctl add-br ovsbr_int
+ $(find / -name Q_telnet.py) add-ip ovsbr_int $INTERN_GW/$INTERN_SUBNET
+ ## Defaullt NAT Rule Creation
+ GW_IFACE=$(route | grep -i 'default' | awk '{print $8}')
+ SNAT_IP=`ifconfig $GW_IFACE | grep -i 'inet addr' | awk -F'[ :]' '{print $13}'`
+ iptables -t nat -A POSTROUTING -s $INTERN_NETWORK -o $GW_IFACE -j SNAT --to-source $SNAT_IP
+ iptables-save > $working_directory/iptables.rules
+ ## Rule Auto-startup 
  echo " " >> /etc/network/interfaces
  echo "auto ovsbr_int" >> /etc/network/interfaces
  echo " iface ovsbr_int inet manual" >> /etc/network/interfaces
  echo " up ip link set \$IFACE up promisc on" >> /etc/network/interfaces
- $(find / -name Q_telnet.py) add-ip ovsbr_int $INTERN_GW/$INTERN_SUBNET
+ echo " pre-up iptables-restore < $working_directory/iptables.rules" >> /etc/network/interfaces
 fi
