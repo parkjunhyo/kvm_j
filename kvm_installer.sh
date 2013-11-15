@@ -96,6 +96,10 @@ then
  echo " pre-up iptables-restore < $working_directory/iptables.rules" >> /etc/network/interfaces
 fi
 
+## Configuration Change for VMbuilder and Livbrit Option
+## This is necessary to accept the openvswitch on the KVM is working
+sed -i "s/<source bridge='\$bridge'\/>/<source bridge='\$bridge'\/>\n\t\t<virtualport type='openvswitch'>\n\t\t<\/virtualport>\n/" /etc/vmbuilder/libvirt/libvirtxml.tmpl
+
 ## Create the SSH-KEY and Git Server
 if [[ ! -d /gitserver/hypervisor_sshkey ]]
 then
