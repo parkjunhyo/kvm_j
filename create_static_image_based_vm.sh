@@ -13,10 +13,12 @@ then
  echo "$0 [vm name, up to 10 lower letter] [ip address with subnet, 10.210.0.3/24]"
  exit
 fi
+BREXT=${BREXT:='ovsbr_ext'}
+BRINT=${BRINT:='ovsbr_int'}
 VMNAME=$1
 IPADDR=`ipcalc $2 | grep -i 'Address' | awk '{print $2}'`
 SUBNET=`ipcalc $2 | grep -i 'Netmask' | awk '{print $2}'`
-GATEWY=$(ifconfig ovsbr_int | grep -i 'inet addr' | awk -F'[ :]' '{print $13}')
+GATEWY=`ifconfig $BRINT | grep -i 'inet addr' | awk -F'[ :]' '{print $13}'`
 
 ## KVM work place and directory information
 VMIMAGE_DIR='/var/lib/libvirt/images'
@@ -42,8 +44,6 @@ sed -i 's/swapsize/'$SWAPVOL'/' $GUEST_DIR/vmbuilder.partition
 sed -i 's/varsize/'$VARVOL'/' $GUEST_DIR/vmbuilder.partition
 
 ## Create the Virtual Machine with VMbuilder
-BREXT=${BREXT:='ovsbr_ext'}
-BRINT=${BRINT:='ovsbr_int'}
 ARCH=${ARCH:='amd64'}
 MEM=${MEM:='1024'}
 USERNAME=${USERNAME:='useradmin'}
