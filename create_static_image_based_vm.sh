@@ -42,12 +42,14 @@ sed -i 's/swapsize/'$SWAPVOL'/' $GUEST_DIR/vmbuilder.partition
 sed -i 's/varsize/'$VARVOL'/' $GUEST_DIR/vmbuilder.partition
 
 ## Create the Virtual Machine with VMbuilder
+BREXT=${BREXT:='ovsbr_ext'}
+BRINT=${BRINT:='ovsbr_int'}
 ARCH=${ARCH:='amd64'}
 MEM=${MEM:='1024'}
 USERNAME=${USERNAME:='useradmin'}
 USERPASS=${USERPASS:='userpass'}
 cd $GUEST_DIR
-vmbuilder kvm ubuntu --suite=precise --flavour=virtual --arch=$ARCH --mirror=http://archive.ubuntu.com/ubuntu -o --libvirt=qemu:///system --ip=$IPADDR --gw=$GATEWY --net=$SUBNET --dns=8.8.8.8 --part=vmbuilder.partition --templates=mytemplates --user=$USERNAME --name=$USERNAME --pass=$USERPASS --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid --firstboot=$working_directory/boot.sh --mem=$MEM --hostname=$VMNAME --bridge=ovsbr_int
+vmbuilder kvm ubuntu --suite=precise --flavour=virtual --arch=$ARCH --mirror=http://archive.ubuntu.com/ubuntu -o --libvirt=qemu:///system --ip=$IPADDR --gw=$GATEWY --net=$SUBNET --dns=8.8.8.8 --part=vmbuilder.partition --templates=mytemplates --user=$USERNAME --name=$USERNAME --pass=$USERPASS --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid --firstboot=$working_directory/boot.sh --mem=$MEM --hostname=$VMNAME --bridge=$BRINT
 cd $working_directory
 
 ## Multi-NIC interface Creation and generation

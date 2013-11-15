@@ -59,6 +59,8 @@ then
 fi
 
 ## Create the Virtual Network using OPENVSWITCH
+BREXT=${BREXT:='ovsbr_ext'}
+BRINT=${BRINT:='ovsbr_int'}
 INTERN_NETWORK=${INTERN_NETWORK:='10.210.0.1/24'}
 INTERN_GW=$(ipcalc $INTERN_NETWORK | grep -i 'HostMin' | awk '{print $2}')
 INTERN_NETMASK=$(ipcalc $INTERN_NETWORK | grep -i 'Netmask' | awk '{print $2}')
@@ -69,18 +71,18 @@ IPADDR_C=$(echo $INTERN_GW | awk -F'[.]' '{print $3}')
 INTERN_DHCP=$IPADDR_A.$IPADDR_B.$IPADDR_C.$(expr $(echo $INTERN_GW | awk -F'[.]' '{print $4}') + '1')
 INTERN_DHCP_START=$IPADDR_A.$IPADDR_B.$IPADDR_C.$(expr $(echo $INTERN_GW | awk -F'[.]' '{print $4}') + '2')
 INTERN_DHCP_END=$(ipcalc $INTERN_NETWORK | grep -i 'HostMax' | awk '{print $2}')
-if [[ ! `ip link show | grep -i 'ovsbr_ext'` ]]
+if [[ ! `ip link show | grep -i $BREXT` ]]
 then
- ovs-vsctl add-br ovsbr_ext
+ ovs-vsctl add-br $BREXT
  echo " " >> /etc/network/interfaces
- echo "auto ovsbr_ext" >> /etc/network/interfaces
- echo " iface ovsbr_ext inet manual" >> /etc/network/interfaces
+ echo "auto $BREXT" >> /etc/network/interfaces
+ echo " iface $BREXT inet manual" >> /etc/network/interfaces
  echo " up ip link set \$IFACE up promisc on" >> /etc/network/interfaces
 fi
-if [[ ! `ip link show | grep -i 'ovsbr_int'` ]]
+if [[ ! `ip link show | grep -i $BRINT` ]]
 then
- ovs-vsctl add-br ovsbr_int
- $(find / -name Q_telnet.py) add-ip ovsbr_int $INTERN_GW/$INTERN_SUBNET
+ ovs-vsctl add-br $BRINT
+ $(find / -name Q_telnet.py) add-ip $BRINT $INTERN_GW/$INTERN_SUBNET
  ## Defaullt NAT Rule Creation
  GW_IFACE=$(route | grep -i 'default' | awk '{print $8}')
  SNAT_IP=`ifconfig $GW_IFACE | grep -i 'inet addr' | awk -F'[ :]' '{print $13}'`
@@ -88,8 +90,8 @@ then
  iptables-save > $working_directory/iptables.rules
  ## Rule Auto-startup 
  echo " " >> /etc/network/interfaces
- echo "auto ovsbr_int" >> /etc/network/interfaces
- echo " iface ovsbr_int inet manual" >> /etc/network/interfaces
+ echo "auto $BRINT" >> /etc/network/interfaces
+ echo " iface $BRINT inet manual" >> /etc/network/interfaces
  echo " up ip link set \$IFACE up promisc on" >> /etc/network/interfaces
  echo " pre-up iptables-restore < $working_directory/iptables.rules" >> /etc/network/interfaces
 fi
