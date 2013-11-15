@@ -26,5 +26,7 @@ fi
 virsh undefine $VMNAME
 rm -rf /var/lib/libvirt/images/$VMNAME
 sed -i "/$VMNAME/d" /etc/hosts
+
+## delete extended network
 VM_Extended_Network="$VMNAME"_xn
 ovs-vsctl del-br $VM_Extended_Network
