@@ -15,11 +15,11 @@ cd $working_directory
 
 ## GIT SSH Key Inserting this will make more easy to access with ssh
 SSHGIT_SERVER=`route | grep -i 'default' | awk '{print $2}'`
-if [[ ! -d /root/.ssh ]]
+if [ ! -d /root/.ssh ]
 then
  mkdir -p /root/.ssh
 fi
 cd /root/.ssh
-git clone git://$SSHGIT_SERVER/gitserver/hypervisor_sshkey.git
+git clone git://$SSHGIT_SERVER/hypervisor_sshkey.git
 cp hypervisor_sshkey/authorized_keys .
-cd cd $working_directory
+cd $working_directory
