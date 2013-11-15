@@ -12,6 +12,8 @@ then
  exit
 fi
 
+## Installation SSH-Key GIT server
+apt-get install -y expect libexpat1-dev libcurl4-gnutls-dev gettext zlib1g-dev libssl-dev
 ## Installation KVM Packages
 apt-get install -y git ubuntu-virt-server python-vm-builder kvm-ipxe lvm2
 ## Installation IP address calculation
@@ -90,4 +92,28 @@ then
  echo " iface ovsbr_int inet manual" >> /etc/network/interfaces
  echo " up ip link set \$IFACE up promisc on" >> /etc/network/interfaces
  echo " pre-up iptables-restore < $working_directory/iptables.rules" >> /etc/network/interfaces
+fi
+
+## Create the SSH-KEY and Git Server
+if [[ ! -d /gitserver/hypervisor_sshkey ]]
+then
+ mkdir -p /gitserver
+ mkdir -p /gitserver/hypervisor_sshkey
+ touch /gitserver/hypervisor_sshkey/authorized_keys
+fi
+if [[ ! -f /root/.ssh/id_rsa ]]
+then
+ $working_directory/sshkey_generate.exp
+ cat /root/.ssh/id_rsa.pub > /gitserver/hypervisor_sshkey/authorized_keys
+ ## GIT uploading
+ cd /gitserver/hypervisor_sshkey
+ git init
+ git add .
+ git commit -m 'first ssh key upload'
+ ## GIT exporting
+ cd /gitserver/
+ git clone --bare hypervisor_sshkey/
+ touch /gitserver/hypervisor_sshkey.git/git-daemon-export-ok
+ cd $working_directory
+ git daemon --reuseaddr --base-path=/gitserver&
 fi

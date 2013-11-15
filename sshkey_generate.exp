@@ -1,0 +1,14 @@
+#! /usr/bin/expect
+
+## This is the file to enable git server with ssh-key
+## This ssh-key file will be downloaded in the KVM (Linux OS)
+## It will make the SSH access is OK without the Password
+
+spawn bash -c "ssh-keygen"
+expect -re "Enter file in which to save the key (/root/.ssh/id_rsa):"
+send "\r"
+expect -re "Enter passphrase (empty for no passphrase):"
+send "\r"
+expect -re "Enter same passphrase again:"
+send "\r"
+interact
