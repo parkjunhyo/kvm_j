@@ -10,7 +10,7 @@ source $working_directory/kvm_setup.env
 ## Check the Variable to create VM machine
 if [[ $# -ne 2 ]]
 then
- echo "$0 [vm name, not capital letter] [ip address with subnet, 10.210.0.3/24]"
+ echo "$0 [vm name, up to 10 lower letter] [ip address with subnet, 10.210.0.3/24]"
  exit
 fi
 VMNAME=$1
@@ -50,12 +50,15 @@ cd $GUEST_DIR
 vmbuilder kvm ubuntu --suite=precise --flavour=virtual --arch=$ARCH --mirror=http://archive.ubuntu.com/ubuntu -o --libvirt=qemu:///system --ip=$IPADDR --gw=$GATEWY --net=$SUBNET --dns=8.8.8.8 --part=vmbuilder.partition --templates=mytemplates --user=$USERNAME --name=$USERNAME --pass=$USERPASS --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid --firstboot=$working_directory/boot.sh --mem=$MEM --hostname=$VMNAME --bridge=ovsbr_int
 cd $working_directory
 
+## Multi-NIC interface Creation and generation
+## This creation has default Multi-Nic Interface to extention
+VM_Extended_Network="$VMNAME"_xn
+ovs-vsctl add-br $VM_Extended_Network
+sed -i "s/<\/interface>/<\/interface>\n\t<interface type='bridge'>\n\t\t<source bridge='$VM_Extended_Network'\/>\n\t\t<virtualport type='openvswitch'>\n\t\t<\/virtualport>\n\t\t<model type='virtio'\/>\n\t<\/interface>\n/" /etc/libvirt/qemu/$VMNAME.xml
+
 ## VIRSH define the VM
 virsh define /etc/libvirt/qemu/$VMNAME.xml
 
 ## update the IP assign information
-if [[ ! -f $working_directory/IP_used_resource.txt ]]
-then
- touch $working_directory/IP_used_resource.txt
-fi
-
+## update the host file to easy VM controller
+echo "$IPADDR $VMNAME" >> /etc/hosts
