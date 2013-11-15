@@ -10,7 +10,7 @@ source $working_directory/kvm_setup.env
 ## Check the Variable to create VM machine
 if [[ $# -ne 2 ]]
 then
- echo "please, $0 [vm name] [ip address with subnet, 10.210.0.3/24]"
+ echo "$0 [vm name, not capital letter] [ip address with subnet, 10.210.0.3/24]"
  exit
 fi
 VMNAME=$1
@@ -52,3 +52,10 @@ cd $working_directory
 
 ## VIRSH define the VM
 virsh define /etc/libvirt/qemu/$VMNAME.xml
+
+## update the IP assign information
+if [[ ! -f $working_directory/IP_used_resource.txt ]]
+then
+ touch $working_directory/IP_used_resource.txt
+fi
+
