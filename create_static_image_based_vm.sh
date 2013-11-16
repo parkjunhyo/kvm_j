@@ -8,17 +8,62 @@ working_directory=$(pwd)
 source $working_directory/kvm_setup.env
 
 ## Check the Variable to create VM machine
-if [[ $# -ne 2 ]]
-then
- echo "$0 [vm name, up to 10 lower letter] [ip address with subnet, 10.210.0.3/24]"
- exit
-fi
 BREXT=${BREXT:='ovsbr_ext'}
 BRINT=${BRINT:='ovsbr_int'}
+if [[ $# -ne 2 ]]
+then
+ echo "$0 [vm name, up to 10 lower letter] [ip address]"
+ exit
+fi
+
+## Check IP address format
+if [[ ! `echo $2| awk -F'[/]' '{print $1}' | egrep "[[:digit:]]+.[[:digit:]]+.[[:digit:]]+.[[:digit:]]+"` ]]
+then
+ echo "wrong ip address format, please confirm it is correct!"
+ exit
+fi
+
+## Check IP address subnet size (force to match the subnet by system)
+INTERN_NETWORK=$(ip addr show $BRINT | grep -i "\<inet\>" | awk '{print $2}')
+SUBNET_NUM=`ipcalc $INTERN_NETWORK | grep -i 'Netmask' | awk '{print $4}'`
+SYSTEM_MIN=`ipcalc $INTERN_NETWORK | grep -i 'HostMin' | awk '{print $2}'`
+SYSTEM_MAX=`ipcalc $INTERN_NETWORK | grep -i 'HostMax' | awk '{print $2}'`
+if [[ `echo $2 | grep -i "/"` ]]
+then
+ INPUT_IPADDR=$2
+ INPUT_IP_MIN=`ipcalc $2 | grep -i 'HostMin' | awk '{print $2}'`
+ INPUT_IP_MAX=`ipcalc $2 | grep -i 'HostMax' | awk '{print $2}'`
+ if [[ $SYSTEM_MIN != $INPUT_IP_MIN || $SYSTEM_MAX != $INPUT_IP_MAX ]]
+ then
+  echo "This system has $INTERN_NETWORK, Your input is something wrong!"
+  echo "The system will change the subnet size....first checking!"
+  INPUT_IPADDR=$(echo $2| awk -F'[/]' '{print $1}')/$SUBNET_NUM
+ fi
+else
+ SUBNET_NUM=`ipcalc $INTERN_NETWORK | grep -i 'Netmask' | awk '{print $4}'`
+ INPUT_IPADDR=$2/$INPUT_IPADDR
+fi
+
+## Check IP address range (member check!)
+if [[ $(ipcalc $INPUT_IPADDR | grep -i 'HostMin' | awk '{print $2}') != $SYSTEM_MIN || $(ipcalc $INPUT_IPADDR | grep -i 'HostMax' | awk '{print $2}') != $SYSTEM_MAX ]]
+then
+ echo "wrong ip address agains system $INTERN_NETWORK, please check your inputs!"
+ exit
+fi
+
+## SYSTEM PARAMETER to create vm will be setuped at this time
 VMNAME=$1
-IPADDR=`ipcalc $2 | grep -i 'Address' | awk '{print $2}'`
-SUBNET=`ipcalc $2 | grep -i 'Netmask' | awk '{print $2}'`
+IPADDR=`ipcalc $INPUT_IPADDR | grep -i 'Address' | awk '{print $2}'`
+SUBNET=`ipcalc $INPUT_IPADDR | grep -i 'Netmask' | awk '{print $2}'`
 GATEWY=`ifconfig $BRINT | grep -i 'inet addr' | awk -F'[ :]' '{print $13}'`
+
+
+## Check Internal IP usage status by /etc/hosts
+if [[ `cat /etc/hosts | grep -i "\<$IPADDR\>"` ]]
+then
+ echo "This ip address has been already located, check /etc/hosts file!"
+ exit
+fi
 
 ## KVM work place and directory information
 VMIMAGE_DIR='/var/lib/libvirt/images'
