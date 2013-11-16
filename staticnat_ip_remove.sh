@@ -80,10 +80,22 @@ then
   fi
  done 
 fi
-if [[ $STATUS = "true" ]]
+if [[ $STATUS = "false" ]]
 then
- $(find / -name Q_telnet.py) rm-ip $BREXT $PUBIP
- GW_IFACE=`route | grep -i 'default' | awk '{print $8}'`
- iptables -t nat -D POSTROUTING -s $PRIIP -o $GW_IFACE -j SNAT --to-source $INPUT_PUBIP
- iptables -t nat -D PREROUTING -d $PUBIP -j DNAT --to-destination $INPUT_PRIIP
+ echo "there is no allocated public ip address $PUBIP"
+ exit
 fi
+
+## Check Internal IP usage status by /etc/hosts
+if [[ ! `cat /etc/hosts | grep -i "\<$INPUT_PRIIP\>"` ]]
+then
+ echo "there is no VM (IP : $PRIIP), create the VM!"
+ exit
+fi
+
+## remove processing
+$(find / -name Q_telnet.py) rm-ip $BREXT $PUBIP
+GW_IFACE=`route | grep -i 'default' | awk '{print $8}'`
+iptables -t nat -D POSTROUTING -s $PRIIP -o $GW_IFACE -j SNAT --to-source $INPUT_PUBIP
+iptables -t nat -D PREROUTING -d $PUBIP -j DNAT --to-destination $INPUT_PRIIP
+
