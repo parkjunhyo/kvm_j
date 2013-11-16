@@ -98,4 +98,4 @@ $(find / -name Q_telnet.py) rm-ip $BREXT $PUBIP
 GW_IFACE=`route | grep -i 'default' | awk '{print $8}'`
 iptables -t nat -D POSTROUTING -s $PRIIP -o $GW_IFACE -j SNAT --to-source $INPUT_PUBIP
 iptables -t nat -D PREROUTING -d $PUBIP -j DNAT --to-destination $INPUT_PRIIP
-
+iptables-save > $working_directory/iptables.rules
