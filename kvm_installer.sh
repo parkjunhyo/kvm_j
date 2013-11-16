@@ -68,6 +68,8 @@ INTERN_SUBNET=$(ipcalc $INTERN_NETWORK | grep -i 'Netmask' | awk -F'[ =]' '{prin
 IPADDR_A=$(echo $INTERN_GW | awk -F'[.]' '{print $1}')
 IPADDR_B=$(echo $INTERN_GW | awk -F'[.]' '{print $2}')
 IPADDR_C=$(echo $INTERN_GW | awk -F'[.]' '{print $3}')
+NATMASK=${NATMASK:='16'}
+INTERN_NATNET=`ipcalc $INTERN_GW/$NATMASK | grep -i 'Network' | awk '{print $2}'`
 INTERN_DHCP=$IPADDR_A.$IPADDR_B.$IPADDR_C.$(expr $(echo $INTERN_GW | awk -F'[.]' '{print $4}') + '1')
 INTERN_DHCP_START=$IPADDR_A.$IPADDR_B.$IPADDR_C.$(expr $(echo $INTERN_GW | awk -F'[.]' '{print $4}') + '2')
 INTERN_DHCP_END=$(ipcalc $INTERN_NETWORK | grep -i 'HostMax' | awk '{print $2}')
@@ -86,6 +88,7 @@ then
  ## Defaullt NAT Rule Creation
  GW_IFACE=$(route | grep -i 'default' | awk '{print $8}')
  SNAT_IP=`ifconfig $GW_IFACE | grep -i 'inet addr' | awk -F'[ :]' '{print $13}'`
+ iptables -t nat -I POSTROUTING -s $INTERN_NETWORK -d $INTERN_NATNET -j ACCEPT
  iptables -t nat -A POSTROUTING -s $INTERN_NETWORK -o $GW_IFACE -j SNAT --to-source $SNAT_IP
  iptables-save > $working_directory/iptables.rules
  ## Rule Auto-startup 
