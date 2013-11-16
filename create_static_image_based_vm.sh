@@ -17,7 +17,8 @@ then
 fi
 
 ## Check IP address format
-if [[ ! `echo $2| awk -F'[/]' '{print $1}' | egrep "[[:digit:]]+.[[:digit:]]+.[[:digit:]]+.[[:digit:]]+"` ]]
+FORM_STATUS=$(echo $2 | awk -F"[/]" '{print $1}' | awk -F"[.]" '{if(NF==4){for(i=1; i<=NF; i++){if($i!~/[[:digit:]]+/){print "false"}}}else{print "false"}}')
+if [[ $FORM_STATUS = "false" ]]
 then
  echo "wrong ip address format, please confirm it is correct!"
  exit
