@@ -126,3 +126,13 @@ then
  cd $working_directory
  git daemon --reuseaddr --base-path=/gitserver&
 fi
+
+## VNC installation
+if [[ ! -d $working_directory/vnc_j ]]
+then
+ git clone https://github.com/parkjunhyo/vnc_j.git
+ cd vnc_j
+ ./setup.sh
+ cd $working_directory
+fi
+

@@ -92,10 +92,11 @@ sed -i 's/varsize/'$VARVOL'/' $GUEST_DIR/vmbuilder.partition
 ## Create the Virtual Machine with VMbuilder
 ARCH=${ARCH:='amd64'}
 MEM=${MEM:='1024'}
+CPU=${CPU:='2'}
 USERNAME=${USERNAME:='useradmin'}
 USERPASS=${USERPASS:='userpass'}
 cd $GUEST_DIR
-vmbuilder kvm ubuntu --suite=precise --flavour=virtual --arch=$ARCH --mirror=http://archive.ubuntu.com/ubuntu -o --libvirt=qemu:///system --ip=$IPADDR --gw=$GATEWY --mask=$SUBNET --dns=8.8.8.8 --part=vmbuilder.partition --templates=mytemplates --user=$USERNAME --name=$USERNAME --pass=$USERPASS --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid --firstboot=$working_directory/boot.sh --mem=$MEM --hostname=$VMNAME --bridge=$BRINT
+vmbuilder kvm ubuntu --suite=precise --flavour=virtual --arch=$ARCH --mirror=http://archive.ubuntu.com/ubuntu -o --libvirt=qemu:///system --ip=$IPADDR --gw=$GATEWY --mask=$SUBNET --dns=8.8.8.8 --part=vmbuilder.partition --templates=mytemplates --user=$USERNAME --name=$USERNAME --pass=$USERPASS --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid --firstboot=$working_directory/boot.sh --cpus=$CPU --mem=$MEM --hostname=$VMNAME --bridge=$BRINT
 cd $working_directory
 
 ## Multi-NIC interface Creation and generation
