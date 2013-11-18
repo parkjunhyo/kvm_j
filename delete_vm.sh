@@ -20,6 +20,7 @@ VMSTATUS=`virsh list --all | grep -i "\<$VMNAME\>" | awk '{print $3}'`
 if [ $VMSTATUS = 'running' ]
 then
  virsh shutdown $VMNAME
+ sleep 5
 fi
 
 ## Check the VM mode (raw mode and QCOW2 mode)
