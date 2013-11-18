@@ -125,6 +125,7 @@ then
  touch /gitserver/hypervisor_sshkey.git/git-daemon-export-ok
  cd $working_directory
  git daemon --reuseaddr --base-path=/gitserver&
+ sed -i "s/exit 0/git daemon --reuseaddr --base-path=\/gitserver\&\nexit 0/" /etc/rc.local
 fi
 
 ## VNC installation
