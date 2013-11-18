@@ -26,26 +26,26 @@ fi
 ## Check the VM mode (raw mode and QCOW2 mode)
 ## Undefine and delete VM images files
 virsh undefine $VMNAME
-if [[ `ls /dev/$(hostname)/$VMNAME*` ]]
+
+## delete the Volume base 
+if [[ `lvdisplay | grep -i $VMNAME` ]]
 then
- set `ls /dev/$(hostname)/$VMNAME*`
- for VOLDEV in $@
+ set `lvdisplay | grep -i $VMNAME | awk '{print $3}'`
+ for LVNAME in $@
  do
-  lvremove $VOLDEV -f
+  lvremove $LVNAME -f
  done
 fi
 
+## QCOW2 File VM (remove processing)
+## remove all data
 if [[ -d /var/lib/libvirt/images/$VMNAME ]]
 then
  rm -rf /var/lib/libvirt/images/$VMNAME
 fi
-if [[ `ls /etc/libvirt/qemu/$VMNAME.xml*` ]]
+if [[ -f "/etc/libvirt/qemu/$VMNAME.xml.bak" ]]
 then
- set `ls /etc/libvirt/qemu/$VMNAME.xml*`
- for XMLFILE in $@
- do
-  rm -rf $XMLFILE
- done
+ rm -rf /etc/libvirt/qemu/$VMNAME.xml.bak
 fi
 
 ## Delete the IP information from hostfile
@@ -53,5 +53,8 @@ sed -i "/$VMNAME/d" /etc/hosts
 
 ## delete extended network and interface
 VM_Extended_Network="$VMNAME"_xn
-ovs-vsctl del-br $VM_Extended_Network
-$(find / -name Q_telnet.py) rm-iface $VM_Extended_Network
+if [[ `ovs-vsctl show | grep -i "\<$VM_Extended_Network\>"` ]]
+then
+ ovs-vsctl del-br $VM_Extended_Network
+ $(find / -name Q_telnet.py) rm-iface $VM_Extended_Network
+fi
