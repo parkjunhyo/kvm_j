@@ -89,6 +89,12 @@ sed -i 's/rootsize/'$ROOTVOL'/' $GUEST_DIR/vmbuilder.partition
 sed -i 's/swapsize/'$SWAPVOL'/' $GUEST_DIR/vmbuilder.partition
 sed -i 's/varsize/'$VARVOL'/' $GUEST_DIR/vmbuilder.partition
 
+## Hoding the Time to stable creation
+while [[ $(ps aux | grep -i 'vmbuilder' | awk 'END{print NR}') -gt 3 ]]
+do
+ sleep 60
+done
+
 ## Create the Virtual Machine with VMbuilder
 ARCH=${ARCH:='amd64'}
 MEM=${MEM:='1024'}
