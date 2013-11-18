@@ -22,9 +22,32 @@ then
  virsh shutdown $VMNAME
 fi
 
+## Check the VM mode (raw mode and QCOW2 mode)
 ## Undefine and delete VM images files
 virsh undefine $VMNAME
-rm -rf /var/lib/libvirt/images/$VMNAME
+if [[ `ls /dev/$(hostname)/$VMNAME*` ]]
+then
+ set `ls /dev/$(hostname)/$VMNAME*`
+ for VOLDEV in $@
+ do
+  lvremove $VOLDEV -f
+ done
+fi
+
+if [[ -d /var/lib/libvirt/images/$VMNAME ]]
+then
+ rm -rf /var/lib/libvirt/images/$VMNAME
+fi
+if [[ `ls /etc/libvirt/qemu/$VMNAME.xml*` ]]
+then
+ set `ls /etc/libvirt/qemu/$VMNAME.xml*`
+ for XMLFILE in $@
+ do
+  rm -rf $XMLFILE
+ done
+fi
+
+## Delete the IP information from hostfile
 sed -i "/$VMNAME/d" /etc/hosts
 
 ## delete extended network and interface

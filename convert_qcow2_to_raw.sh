@@ -1,6 +1,7 @@
 #! /usr/bin/env bash
 
-
+##### This file will be used for converting the QCOW2 file to RAW file
+##### RAW file will be used, when the Logical Volum based system
 ## check the input variable
 if [[ $# -ne 1 ]]
 then
@@ -64,5 +65,3 @@ fi
 
 ## define the raw xml file
 virsh define $XML_INFO
-
-
