@@ -1,6 +1,5 @@
 #! /usr/bin/env bash
 
-source /root/kvm_j/kvm_setup.env
 
 ## Loop devicse Increasement for the KVM generation
 ## This paramter will be affected the multiple installation
