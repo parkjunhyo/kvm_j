@@ -19,6 +19,12 @@ do
   chown root.disk /dev/loop$LoID
  fi 
 done
+if [[ ! `cat /etc/rc.local | grep -i "increase_loopdev.sh"` ]]
+then
+ sed -i "/exit 0/d" /etc/rc.local
+ echo "$(find / -name increase_loopdev.sh)" >> /etc/rc.local
+ echo "exit 0" >> /etc/rc.local
+fi
 
 ## CPU virtualization confirmation
 ## This parameter will decide the CPU can be virualized, at this time
