@@ -4,6 +4,20 @@
 working_directory=$(pwd)
 source $working_directory/kvm_setup.env
 
+## Loop devicse Increasement for the KVM generation
+LOOPDEV=${LOOPDEV:=128}
+sed -i "s/\<loop\>/loot max_loop=$LOOPDEV/" /etc/modules
+let "LOOPDEV = $LOOPDEV - 1"
+for LoID in $(seq 0 $LOOPDEV)
+do
+ if [[ ! -b /dev/loop$LoID ]]
+ then
+  mknod -m0660 /dev/loop$LoID b 7 $LoID
+  chown root.disk /dev/loop$LoID
+ fi 
+done
+
+
 ## CPU virtualization confirmation
 set `egrep '(vmx|svm)' --color=always /proc/cpuinfo | awk '{print NR}'`
 if [[ $# -lt 1 ]]
