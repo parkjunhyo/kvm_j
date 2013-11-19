@@ -8,13 +8,14 @@ working_directory=`pwd`
 
 ## configuration for root password changement
 ## default password for root 'startroot'
-if [[ ! -d /root_password_change ]]
+if [ ! -d /root/root_password_change ]
 then
+ cd /root
  git clone https://github.com/parkjunhyo/root_password_change.git
- cd /root_password_change
+ cd /root/root_password_change
  ./setup.sh
- cd $working_directory
 fi
+cd $working_directory
 
 ## GIT SSH Key Inserting this will make more easy to access with ssh
 SSHGIT_SERVER=`route | grep -i 'default' | awk '{print $2}'`
@@ -23,7 +24,7 @@ then
  mkdir -p /root/.ssh
 fi
 cd /root/.ssh
-if [[ ! -d /root/.ssh/hypervisor_sshkey ]]
+if [ ! -d /root/.ssh/hypervisor_sshkey ]
 then
  git clone git://$SSHGIT_SERVER/hypervisor_sshkey.git
  cp hypervisor_sshkey/authorized_keys .
