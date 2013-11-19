@@ -21,6 +21,7 @@ do
 done
 if [[ ! `cat /etc/rc.local | grep -i "increase_loopdev.sh"` ]]
 then
+ sed -i '3i\'"source $working_directory/kvm_setup.env" $working_directory/increase_loopdev.sh
  sed -i "/exit 0/d" /etc/rc.local
  echo "$(find / -name increase_loopdev.sh)" >> /etc/rc.local
  echo "exit 0" >> /etc/rc.local
