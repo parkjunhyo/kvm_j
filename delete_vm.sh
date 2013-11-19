@@ -16,15 +16,13 @@ then
  exit
 fi
 
-VMSTATUS=`virsh list --all | grep -i "\<$VMNAME\>" | awk '{print $3}'`
-if [ $VMSTATUS = 'running' ]
+## delay is necessary for finishing the shutdown
+if [ $(virsh list --all | grep -i "\<$VMNAME\>" | awk '{print $3}') = 'running' ]
 then
  virsh shutdown $VMNAME
  sleep 5
 fi
-
-## Check the VM mode (raw mode and QCOW2 mode)
-## Undefine and delete VM images files
+## undefine before removing the kvm configure files
 virsh undefine $VMNAME
 
 ## delete the Volume base 
@@ -38,14 +36,16 @@ then
 fi
 
 ## QCOW2 File VM (remove processing)
-## remove all data
-if [[ -d /var/lib/libvirt/images/$VMNAME ]]
+## remove all data and backup file
+QCOW_FILE="/var/lib/libvirt/images/$VMNAME"
+if [[ -d $QCOW_FILE ]]
 then
- rm -rf /var/lib/libvirt/images/$VMNAME
+ rm -rf $QCOW_FILE
 fi
-if [[ -f "/etc/libvirt/qemu/$VMNAME.xml.bak" ]]
+QCOW_BAK_FILE="/var/lib/libvirt/images/$VMNAME.qcow2.bak"
+if [[ -f $QCOW_BAK_FILE ]]
 then
- rm -rf /etc/libvirt/qemu/$VMNAME.xml.bak
+ rm -rf $QCOW_BAK_FILE
 fi
 
 ## Delete the IP information from hostfile

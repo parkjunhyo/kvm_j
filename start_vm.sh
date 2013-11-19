@@ -17,14 +17,12 @@ then
  exit
 fi
 
-VMSTATUS=`virsh list --all | grep -i "\<$VMNAME\>" | awk '{print $3}'`
-if [ $VMSTATUS = 'running' ]
+## start vm
+if [ $(virsh list --all | grep -i "\<$VMNAME\>" | awk '{print $3}') = 'running' ]
 then
  echo "$VMNAME has been already started!"
  exit
-fi
-if [ $VMSTATUS = 'shut' ]
-then
+else
  virsh define /etc/libvirt/qemu/$VMNAME.xml
  virsh start $VMNAME 
 fi

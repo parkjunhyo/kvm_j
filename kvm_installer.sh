@@ -22,7 +22,7 @@ done
 
 ## CPU virtualization confirmation
 ## This parameter will decide the CPU can be virualized, at this time
-if [[ `egrep '(vmx|svm)' --color=always /proc/cpuinfo | awk 'END{print NR}'`]]
+if [[ `egrep '(vmx|svm)' --color=always /proc/cpuinfo | awk 'END{print NR}'` ]]
 then
  set `egrep '(vmx|svm)' --color=always /proc/cpuinfo | awk 'END{print NR}'`
  if [[ $# -lt 1 ]]
@@ -161,7 +161,9 @@ then
  cd $working_directory
  git daemon --reuseaddr --base-path=/gitserver&
  ## after the system is rebooted, the git server will be restarted!
- sed -i "s/exit 0/git daemon --reuseaddr --base-path=\/gitserver\&\nexit 0/" /etc/rc.local
+ sed -i "/exit 0/d" /etc/rc.local
+ echo "/usr/bin/git daemon --reuseaddr --base-path=/gitserver&" >> /etc/rc.local
+ echo "exit 0" >> /etc/rc.local
 fi
 
 ## VNC installation processing

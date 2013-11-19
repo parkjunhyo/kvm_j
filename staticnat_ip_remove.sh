@@ -12,27 +12,24 @@ then
 fi
 
 ## Bridge Information to ADD public information
-BREXT=${BREXT:='ovsbr_ext'}
-BRINT=${BRINT:='ovsbr_int'}
+BREXT=${BREXT:='ovsbr_pub'}
+BRINT=${BRINT:='ovsbr_pri'}
 
 ## Check the IP address Formation
-FORM_STATUS=$(echo $1 | awk -F"[/]" '{print $1}' | awk -F"[.]" '{if(NF==4){for(i=1; i<=NF; i++){if($i!~/[[:digit:]]+/){print "false"}}}else{print "false"}}')
-if [[ $FORM_STATUS = "false" ]]
-then
- echo "wrong ip address $1 format, please confirm it is correct!"
- exit
-fi
-FORM_STATUS=$(echo $2 | awk -F"[/]" '{print $1}' | awk -F"[.]" '{if(NF==4){for(i=1; i<=NF; i++){if($i!~/[[:digit:]]+/){print "false"}}}else{print "false"}}')
-if [[ $FORM_STATUS = "false" ]]
-then
- echo "wrong ip address $2 format, please confirm it is correct!"
- exit
-fi
+for INIPADDR in $@
+do
+ if [[ $(echo $INIPADDR | awk -F"[/]" '{print $1}' | awk -F"[.]" '{if(NF==4){for(i=1; i<=NF; i++){if($i~/[[:alpha:]]+/){print "false";break}}}else{print "false"}}') = "false" ]]
+ then
+  echo "wrong ip address : $INIPADDR format, please confirm it is correct!"
+  exit
+ fi
+done
 
 ## Check the Public IP address usage
 ## In this process, the public ip address will be setted with 32bit host subnet
 PUBIP=`echo $1 | awk -F'[/]' '{print $1}'`/32
 INPUT_PUBIP=`echo $PUBIP | awk -F'[/]' '{print $1}'`
+
 
 ## Check the Private IP address usage
 ## In this processing, the private ip address will be checked by system status
@@ -48,23 +45,26 @@ then
  INPUT_IP_MAX=`ipcalc $2 | grep -i 'HostMax' | awk '{print $2}'`
  if [[ $SYSTEM_MIN != $INPUT_IP_MIN || $SYSTEM_MAX != $INPUT_IP_MAX ]]
  then
-  echo "This system has $INTERN_NETWORK, Your input is something wrong!"
-  echo "The system will change the subnet size....first checking!"
+  echo "This system has $INTERN_NETWORK, Your subnet is wrong(MIN $INPUT_IP_MIN, MAX $INPUT_IP_MAX)!"
   INPUT_IPADDR=$(echo $2| awk -F'[/]' '{print $1}')/$SUBNET_NUM
+  echo "Your input ip address will be changed as $INPUT_IPADDR"
  fi
 else
- SUBNET_NUM=`ipcalc $INTERN_NETWORK | grep -i 'Netmask' | awk '{print $4}'`
- INPUT_IPADDR=$2/$INPUT_IPADDR
+ INPUT_IPADDR=$2/$SUBNET_NUM
 fi
 
-## Check IP address range (member check!)
+## Check IP address range (member check!), again
 if [[ $(ipcalc $INPUT_IPADDR | grep -i 'HostMin' | awk '{print $2}') != $SYSTEM_MIN || $(ipcalc $INPUT_IPADDR | grep -i 'HostMax' | awk '{print $2}') != $SYSTEM_MAX ]]
 then
- echo "wrong ip address agains system $INTERN_NETWORK, please check your inputs!"
+ echo "your ip address $INPUT_IPADDR, however the system ip is $INTERN_NETWORK !"
+ echo "stop the processing........kvm creation fail.."
  exit
 fi
 PRIIP=$INPUT_IPADDR
 INPUT_PRIIP=`echo $PRIIP | awk -F'[/]' '{print $1}'`
+
+## print information input ip format
+echo "PUBLIC IP $PUBIP, PRIVATE INNER IP $PRIIP"
 
 ## Check Public IP usage status
 if [[ `ip addr show $BREXT | grep -i "\<inet\>" | awk -F'[ /]' '{print $6}'` ]]
@@ -89,7 +89,7 @@ fi
 ## Check Internal IP usage status by /etc/hosts
 if [[ ! `cat /etc/hosts | grep -i "\<$INPUT_PRIIP\>"` ]]
 then
- echo "there is no VM (IP : $PRIIP), create the VM!"
+ echo "there is no VM (IP : $INPUT_PRIIP), create the VM!"
  exit
 fi
 

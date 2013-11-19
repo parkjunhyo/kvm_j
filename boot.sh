@@ -4,14 +4,17 @@
 
 ## install open-ssh and git client
 apt-get install -qqy --force-yes openssh-server git
+working_directory=`pwd`
 
 ## configuration for root password changement
 ## default password for root 'startroot'
-git clone https://github.com/parkjunhyo/root_password_change.git
-working_directory=`pwd`
-cd /root_password_change
-./setup.sh
-cd $working_directory
+if [[ ! -d /root_password_change ]]
+then
+ git clone https://github.com/parkjunhyo/root_password_change.git
+ cd /root_password_change
+ ./setup.sh
+ cd $working_directory
+fi
 
 ## GIT SSH Key Inserting this will make more easy to access with ssh
 SSHGIT_SERVER=`route | grep -i 'default' | awk '{print $2}'`
@@ -20,6 +23,9 @@ then
  mkdir -p /root/.ssh
 fi
 cd /root/.ssh
-git clone git://$SSHGIT_SERVER/hypervisor_sshkey.git
-cp hypervisor_sshkey/authorized_keys .
+if [[ ! -d /root/.ssh/hypervisor_sshkey ]]
+then
+ git clone git://$SSHGIT_SERVER/hypervisor_sshkey.git
+ cp hypervisor_sshkey/authorized_keys .
+fi
 cd $working_directory
