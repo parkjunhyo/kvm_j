@@ -5,8 +5,11 @@ working_directory=$(pwd)
 source $working_directory/kvm_setup.env
 
 ## Loop devicse Increasement for the KVM generation
+## This paramter will be affected the multiple installation
+## Ubunut has default as 8, in this time, it will be changed as 128
 LOOPDEV=${LOOPDEV:=128}
 sed -i "s/\<loop\>/loot max_loop=$LOOPDEV/" /etc/modules
+modprobe loop
 let "LOOPDEV = $LOOPDEV - 1"
 for LoID in $(seq 0 $LOOPDEV)
 do
@@ -17,12 +20,18 @@ do
  fi 
 done
 
-
 ## CPU virtualization confirmation
-set `egrep '(vmx|svm)' --color=always /proc/cpuinfo | awk '{print NR}'`
-if [[ $# -lt 1 ]]
+## This parameter will decide the CPU can be virualized, at this time
+if [[ `egrep '(vmx|svm)' --color=always /proc/cpuinfo | awk 'END{print NR}'`]]
 then
- echo "This CPU does not support virtualization!"
+ set `egrep '(vmx|svm)' --color=always /proc/cpuinfo | awk 'END{print NR}'`
+ if [[ $# -lt 1 ]]
+ then
+  echo "This CPU does not support virtualization!"
+  exit
+ fi
+else
+ echo "This CPU does not support vitrualization!"
  exit
 fi
 
@@ -40,6 +49,9 @@ then
  cd $working_directory/libvirt_upgrade
  ./setup_upgrade.sh
  cd $working_directory
+ # remove default libvirt(virtual) network
+ virsh net-destroy default
+ virsh net-undefine default
 fi
 
 ## Installation Openvswitch (kernel module installation)
@@ -56,25 +68,29 @@ adduser `id -un` libvirtd
 adduser `id -un` kvm
 
 ## Installation Quagga Software Router
+## OSPF routing protocol will be enabled and Ethernet interface will be setted up
+GW_IFACE=$(route | grep -i 'default' | awk '{print $8}')
 if [[ ! -d $working_directory/quagga_j ]]
 then
  git clone https://github.com/parkjunhyo/quagga_j.git
  cd $working_directory/quagga_j
  sed -i "s/hostlo=\${hostlo:='change_lo'}//" ./netcfg.info
+ LOOPBACK=${LOOPBACK:="192.168.0.2/32"}
  echo "hostlo=$LOOPBACK" >> ./netcfg.info
  ./setup.sh
  ### Enable OSPF routing Protocol
  $(find / -name Q_telnet.py) enable-ospf $(echo $LOOPBACK | awk -F'[/]' '{print $1}')
  ### ADD default GW network in OSPF
- GW_IFACE=$(route | grep -i 'default' | awk '{print $8}')
  GW_NETWORK=$(ip addr show $GW_IFACE | grep -i 'inet' | grep -i $GW_IFACE | awk '{print $2}')
  $(find / -name Q_telnet.py) add-ospf-net $GW_NETWORK $OSPF_AREA
  cd $working_directory
 fi
 
 ## Create the Virtual Network using OPENVSWITCH
-BREXT=${BREXT:='ovsbr_ext'}
-BRINT=${BRINT:='ovsbr_int'}
+## Internal Network Creation
+## This Internal Network will be used for the vm interfaces
+BREXT=${BREXT:='ovsbr_pub'}
+BRINT=${BRINT:='ovsbr_pri'}
 INTERN_NETWORK=${INTERN_NETWORK:='10.210.0.1/24'}
 INTERN_GW=$(ipcalc $INTERN_NETWORK | grep -i 'HostMin' | awk '{print $2}')
 INTERN_NETMASK=$(ipcalc $INTERN_NETWORK | grep -i 'Netmask' | awk '{print $2}')
@@ -94,13 +110,13 @@ then
  echo "auto $BREXT" >> /etc/network/interfaces
  echo " iface $BREXT inet manual" >> /etc/network/interfaces
  echo " up ip link set \$IFACE up promisc on" >> /etc/network/interfaces
+ echo " " >> /etc/network/interfaces
 fi
 if [[ ! `ip link show | grep -i $BRINT` ]]
 then
  ovs-vsctl add-br $BRINT
  $(find / -name Q_telnet.py) add-ip $BRINT $INTERN_GW/$INTERN_SUBNET
  ## Defaullt NAT Rule Creation
- GW_IFACE=$(route | grep -i 'default' | awk '{print $8}')
  SNAT_IP=`ifconfig $GW_IFACE | grep -i 'inet addr' | awk -F'[ :]' '{print $13}'`
  iptables -t nat -I POSTROUTING -s $INTERN_NETWORK -d $INTERN_NATNET -j ACCEPT
  iptables -t nat -A POSTROUTING -s $INTERN_NETWORK -o $GW_IFACE -j SNAT --to-source $SNAT_IP
@@ -111,6 +127,7 @@ then
  echo " iface $BRINT inet manual" >> /etc/network/interfaces
  echo " up ip link set \$IFACE up promisc on" >> /etc/network/interfaces
  echo " pre-up iptables-restore < $working_directory/iptables.rules" >> /etc/network/interfaces
+ echo " " >> /etc/network/interfaces
 fi
 
 ## Configuration Change for VMbuilder and Livbrit Option
@@ -118,12 +135,16 @@ fi
 sed -i "s/<source bridge='\$bridge'\/>/<source bridge='\$bridge'\/>\n\t\t<virtualport type='openvswitch'>\n\t\t<\/virtualport>\n/" /etc/vmbuilder/libvirt/libvirtxml.tmpl
 
 ## Create the SSH-KEY and Git Server
+## this process will be two kind of ssh access method into the vm
+## first one is the root password enable
+## second is the ssh key creation
 if [[ ! -d /gitserver/hypervisor_sshkey ]]
 then
  mkdir -p /gitserver
  mkdir -p /gitserver/hypervisor_sshkey
  touch /gitserver/hypervisor_sshkey/authorized_keys
 fi
+## Generate the GIT enviorment to download the ssh for the vms
 if [[ ! -f /root/.ssh/id_rsa ]]
 then
  $working_directory/sshkey_generate.exp
@@ -139,15 +160,18 @@ then
  touch /gitserver/hypervisor_sshkey.git/git-daemon-export-ok
  cd $working_directory
  git daemon --reuseaddr --base-path=/gitserver&
+ ## after the system is rebooted, the git server will be restarted!
  sed -i "s/exit 0/git daemon --reuseaddr --base-path=\/gitserver\&\nexit 0/" /etc/rc.local
 fi
 
-## VNC installation
+## VNC installation processing
 if [[ ! -d $working_directory/vnc_j ]]
 then
  git clone https://github.com/parkjunhyo/vnc_j.git
  cd vnc_j
  ./setup.sh
+ ./shutdown_vnc.sh
+ ./startvnc.sh
  cd $working_directory
 fi
 
