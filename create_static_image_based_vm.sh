@@ -107,9 +107,10 @@ ARCH=${ARCH:='amd64'}
 MEM=${MEM:='2048'}
 CPU=${CPU:='2'}
 USERNAME=${USERNAME:='useradmin'}
+KERNEL=${KERNEL:='virtual'}
 USERPASS=${USERPASS:='userpass'}
 cd $GUEST_DIR
-vmbuilder kvm ubuntu --suite=precise --flavour=virtual --arch=$ARCH --mirror=http://archive.ubuntu.com/ubuntu -o --libvirt=qemu:///system --ip=$IPADDR --gw=$GATEWY --mask=$SUBNET --dns=8.8.8.8 --part=vmbuilder.partition --templates=mytemplates --user=$USERNAME --name=$USERNAME --pass=$USERPASS --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid --firstboot=$GUEST_DIR/boot.sh --cpus=$CPU --mem=$MEM --hostname=$VMNAME --bridge=$BRINT
+vmbuilder kvm ubuntu --suite=precise --flavour=$KERNEL --arch=$ARCH --mirror=http://archive.ubuntu.com/ubuntu -o --libvirt=qemu:///system --ip=$IPADDR --gw=$GATEWY --mask=$SUBNET --dns=8.8.8.8 --part=vmbuilder.partition --templates=mytemplates --user=$USERNAME --name=$USERNAME --pass=$USERPASS --addpkg=vim-nox --addpkg=unattended-upgrades --addpkg=acpid --firstboot=$GUEST_DIR/boot.sh --cpus=$CPU --mem=$MEM --hostname=$VMNAME --bridge=$BRINT
 cd $working_directory
 
 ## KVM complete status check 
