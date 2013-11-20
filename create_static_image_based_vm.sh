@@ -68,8 +68,14 @@ then
   echo "this $IPADDR is used for $VMNAME!"
   exit
  else
-  # remove ip address hosts file when the vm images is not existed!
-  sed -i "/$IPADDR/d" /etc/hosts 
+  if [[ `ps aux | grep -i 'vmbuilder' | grep $IPADDR` ]]
+  then
+   echo "this $IPADDR is reserved for other vm"
+   exit
+  else
+   # remove ip address hosts file when the vm images is not existed!
+   sed -i "/$IPADDR/d" /etc/hosts
+  fi
  fi 
 fi
 SUBNET=`ipcalc $INPUT_IPADDR | grep -i 'Netmask' | awk '{print $2}'`
