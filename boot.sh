@@ -4,6 +4,11 @@
 
 ## install open-ssh and git client
 apt-get install -qqy --force-yes openssh-server git
+apt-get install -y gcc uml-utilities libtool build-essential git pkg-config linux-headers-`uname -r`
+apt-get install -y linux-source-*
+apt-get install -y kernel-package*
+apt-get install -y fakeroot
+
 working_directory=`pwd`
 
 ## configuration for root password changement
