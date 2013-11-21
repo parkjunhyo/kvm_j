@@ -8,6 +8,14 @@ apt-get install -y gcc uml-utilities libtool build-essential git pkg-config linu
 apt-get install -y linux-source-*
 apt-get install -y kernel-package*
 apt-get install -y fakeroot
+apt-get install -y libssl-*
+apt-get install -y sparse
+apt-get install -y python-simplejson 
+apt-get install -y dkms ipsec-tools python-twisted-web racoon
+apt-get install -y python-all 
+apt-get install -y iperf traceroute
+apt-get install -y autoconf
+
 
 working_directory=`pwd`
 
