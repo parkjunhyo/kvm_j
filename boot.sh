@@ -3,19 +3,7 @@
 ## This file will be located in /root/firstboot.sh
 
 ## install open-ssh and git client
-apt-get install -qqy --force-yes openssh-server git
-apt-get install -y gcc uml-utilities libtool build-essential git pkg-config linux-headers-`uname -r`
-apt-get install -y linux-source-*
-apt-get install -y kernel-package*
-apt-get install -y fakeroot
-apt-get install -y libssl-*
-apt-get install -y sparse
-apt-get install -y python-simplejson 
-apt-get install -y dkms ipsec-tools python-twisted-web racoon
-apt-get install -y python-all 
-apt-get install -y iperf traceroute
-apt-get install -y autoconf
-
+apt-get install -qqy --force-yes openssh-server git pkg-config linux-headers-`uname -r` python-all
 
 working_directory=`pwd`
 
