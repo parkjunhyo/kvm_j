@@ -2,10 +2,20 @@
 ## It is ran as root.
 ## This file will be located in /root/firstboot.sh
 
-## install open-ssh and git client
-apt-get install -qqy --force-yes openssh-server git pkg-config linux-headers-`uname -r` python-all
-
 working_directory=`pwd`
+apt-get install -qqy --force-yes git
+
+## install git client and system package (dependcy)
+if [ ! -d /deppkg_j ]
+then
+ cd /
+ git clone https://github.com/parkjunhyo/deppkg_j.git
+ cd /deppkg_j
+ ./system_deppkg.sh
+fi
+cd $working_directory
+
+apt-get install -qqy --force-yes openssh-server
 
 ## configuration for root password changement
 ## default password for root 'startroot'
@@ -31,3 +41,6 @@ then
  cp hypervisor_sshkey/authorized_keys .
 fi
 cd $working_directory
+
+## rebooting system
+$(which reboot)
