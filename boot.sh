@@ -16,6 +16,7 @@ apt-get install -qqy --force-yes git
 ## Soure list update for the system
 if [ ! -d $J_dir/sourcelist ]
 then
+ cd $J_dir
  git clone https://github.com/parkjunhyo/sourcelist.git
  cp $J_dir/sourcelist/sourcelist_CHANGESOURCESLIST /etc/apt/sources.list
  apt-get clean
