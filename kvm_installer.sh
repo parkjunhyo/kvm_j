@@ -64,7 +64,7 @@ then
  git clone https://github.com/parkjunhyo/quagga_j.git
  cd $working_directory/quagga_j
  sed -i "s/#*[[:space:]]*hostlo='change_lo'/hostlo="$LOOPBACK"/" $working_directory/quagga_j/netcfg.info
- #./setup.sh
+ ./setup.sh
  $(find $working_directory/quagga_j -name Q_telnet.py) enable-ospf $LOOPBACK
  insert_network=$(ip addr show `route | grep -i 'default' | awk '{print $8}'` | grep -i '\<inet\>' | awk '{print $2}')
  $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $insert_network $OSPF_AREA
