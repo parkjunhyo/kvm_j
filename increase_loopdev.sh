@@ -4,6 +4,7 @@
 ## Loop devicse Increasement for the KVM generation
 ## This paramter will be affected the multiple installation
 ## Ubunut has default as 8, in this time, it will be changed as 128
+## losetup -a is check
 LOOPDEV=${LOOPDEV:=128}
 sed -i "s/\<loop\>/loot max_loop=$LOOPDEV/" /etc/modules
 modprobe loop
