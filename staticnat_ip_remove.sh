@@ -67,22 +67,9 @@ INPUT_PRIIP=`echo $PRIIP | awk -F'[/]' '{print $1}'`
 echo "PUBLIC IP $PUBIP, PRIVATE INNER IP $PRIIP"
 
 ## Check Public IP usage status
-if [[ `ip addr show $BREXT | grep -i "\<inet\>" | awk -F'[ /]' '{print $6}'` ]]
+if [[ ! `ip addr show | grep -i "\<$INPUT_PUBIP\>"` ]]
 then
- STATUS="false"
- set `ip addr show $BREXT | grep -i "\<inet\>" | awk -F'[ /]' '{print $6}'`
- for USEDIP in $@
- do
-  if [ $USEDIP = $INPUT_PUBIP ]
-  then
-   STATUS="true"
-   break
-  fi
- done 
-fi
-if [[ $STATUS = "false" ]]
-then
- echo "there is no allocated public ip address $PUBIP"
+ echo "this ip $INPUT_PUBIP is not used!"
  exit
 fi
 
@@ -94,8 +81,21 @@ then
 fi
 
 ## remove processing
-$(find / -name Q_telnet.py) rm-ip $BREXT $PUBIP
+for iface in `ip link show | grep -i 'mtu' | awk -F'[ :]' '{print $3}'`
+do
+ if [[ `ip addr show $iface | egrep -i "\<$PUBIP\>"` ]]
+ then
+  port_name=$iface
+  break
+ fi
+done
+$(find `pwd` -name  Q_telnet.py) rm-ip $port_name $PUBIP
+ovs-vsctl del-port $BREXT $port_name
+$(find `pwd` -name  Q_telnet.py) rm-ospf-iface $port_name
+$(find `pwd` -name  Q_telnet.py) rm-zebra-iface $port_name
+
+## delete SNAT and DNAT
 GW_IFACE=`route | grep -i 'default' | awk '{print $8}'`
-iptables -t nat -D POSTROUTING -s $PRIIP -o $GW_IFACE -j SNAT --to-source $INPUT_PUBIP
+iptables -t nat -D POSTROUTING -s $INPUT_PRIIP -o $GW_IFACE -j SNAT --to-source $INPUT_PUBIP
 iptables -t nat -D PREROUTING -d $PUBIP -j DNAT --to-destination $INPUT_PRIIP
 iptables-save > $working_directory/iptables.rules

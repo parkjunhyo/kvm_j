@@ -67,17 +67,10 @@ INPUT_PRIIP=`echo $PRIIP | awk -F'[/]' '{print $1}'`
 echo "PUBLIC IP $PUBIP, PRIVATE INNER IP $PRIIP"
 
 ## Check Public IP usage status
-if [[ `ip addr show $BREXT | grep -i "\<inet\>" | awk -F'[ /]' '{print $6}'` ]]
+if [[ `ip addr show | grep -i "\<$INPUT_PUBIP\>"` ]]
 then
- set `ip addr show $BREXT | grep -i "\<inet\>" | awk -F'[ /]' '{print $6}'`
- for USEDIP in $@
- do
-  if [ $USEDIP = $INPUT_PUBIP ]
-  then
-   echo "This ip $INPUT_PUBIP address has been already located!"
-   exit
-  fi
- done 
+ echo "this ip $INPUT_PUBIP has been used!"
+ exit
 fi
 
 ## Check Internal IP usage status by /etc/hosts
@@ -87,11 +80,15 @@ then
  exit
 fi
 
-## Quagga IP insertation
-$(find / -name Q_telnet.py) add-ip $BREXT $PUBIP
+## public ip address insertation
+vm_name="`cat /etc/hosts | grep -i $INPUT_PRIIP | awk '{print $2}'`"
+let "vm_index = `cat /etc/hosts | grep -i "\<$vm_name\>" | awk 'END{print NR}'` + 1"
+port_name="`cat /etc/hosts | grep -i $INPUT_PRIIP | awk '{print $2}'`_$vm_index"
+ovs-vsctl add-port $BREXT $port_name -- set Interface $port_name type=internal
+$(find `pwd` -name  Q_telnet.py) add-ip $port_name $PUBIP
 
 ## Create SNAT and DNAT
 GW_IFACE=`route | grep -i 'default' | awk '{print $8}'`
-iptables -t nat -I POSTROUTING 2 -s $PRIIP -o $GW_IFACE -j SNAT --to-source $INPUT_PUBIP
+iptables -t nat -I POSTROUTING 2 -s $INPUT_PRIIP -o $GW_IFACE -j SNAT --to-source $INPUT_PUBIP
 iptables -t nat -I PREROUTING -d $PUBIP -j DNAT --to-destination $INPUT_PRIIP
 iptables-save > $working_directory/iptables.rules
