@@ -56,5 +56,6 @@ VM_Extended_Network="$VMNAME"_xn
 if [[ `ovs-vsctl show | grep -i "\<$VM_Extended_Network\>"` ]]
 then
  ovs-vsctl del-br $VM_Extended_Network
- $(find / -name Q_telnet.py) rm-iface $VM_Extended_Network
+ $(find `pwd` -name Q_telnet.py) rm-zebra-iface $VM_Extended_Network
+ $(find `pwd` -name Q_telnet.py) rm-ospf-iface $VM_Extended_Network
 fi
