@@ -53,7 +53,7 @@ then
  git clone https://github.com/parkjunhyo/ovs_j.git
  cd $working_directory/ovs_j
  ./soft_kernel_setup.sh 
- cd $working_directory/ovs_j
+ cd $working_directory
 fi
 
 ## installation quagga software router
@@ -63,11 +63,11 @@ if [ ! -d $working_directory/quagga_j ]
 then
  git clone https://github.com/parkjunhyo/quagga_j.git
  cd $working_directory/quagga_j
- sed -i 's/change_lo/'$LOOPBACK'/' $working_directory/quagga_j/netcfg.info
- ./setup.sh
- $(find / -name Q_telnet.py) enable-ospf $LOOPBACK
+ sed -i "s/#*[[:space:]]*hostlo='change_lo'/hostlo="$LOOPBACK"/" $working_directory/quagga_j/netcfg.info
+ #./setup.sh
+ $(find $working_directory/quagga_j -name Q_telnet.py) enable-ospf $LOOPBACK
  insert_network=$(ip addr show `route | grep -i 'default' | awk '{print $8}'` | grep -i '\<inet\>' | awk '{print $2}')
- $(find / -name Q_telnet.py) add-ospf-net $insert_network $OSPF_AREA
+ $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $insert_network $OSPF_AREA
  cd $working_directory
 fi
 
