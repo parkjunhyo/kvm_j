@@ -5,6 +5,12 @@ working_directory=$(pwd)
 env_source_path=$(find `pwd` -name kvm_setup.env)
 source $env_source_path
 
+## log file creation
+if [ ! -f $LOGFILE ]
+then
+ touch $LOGFILE
+fi
+
 ## check the cpu virtualization status
 if [[ `egrep '(vmx|svm)' --color=always /proc/cpuinfo | awk 'END{print NR}'` -lt 1 ]]
 then
@@ -19,6 +25,7 @@ if [[ ! `cat $(pwd)/increase_loopdev.sh | grep -i $env_source_path` ]]
 then
  sed -i '3i source '$env_source_path'\n' $(pwd)/increase_loopdev.sh
  increase_loop_path=$(find `pwd` -name increase_loopdev.sh)
+ echo "[ $(date) $(pwd) ] increse_loopdev.sh file path : $increase_loop_path" >> $LOGFILE
  $increase_loop_path
  ## init daemon insert
  if [[ ! `cat /etc/rc.local | grep -i $increase_loop_path` ]]
@@ -35,12 +42,14 @@ apt-get install -qqy --force-yes expect libexpat1-dev libcurl4-gnutls-dev gettex
 ## libvirt upgrade for openvswitch kernerl build
 if [ ! -d $working_directory/libvirt_upgrade ]
 then
+ cd $working_directory
  git clone https://github.com/parkjunhyo/libvirt_upgrade.git
  cd $working_directory/libvirt_upgrade
  ./setup_upgrade.sh
  cd $working_directory
  virsh net-destroy default
  virsh net-undefine default
+ echo "[ $(date) $(pwd) ] livbirtd version : $(libvirtd --version)" >> $LOGFILE
 fi
 
 ## add the user authentication for libvirtd and kvm
@@ -50,6 +59,7 @@ adduser `id -un` kvm
 ## openvswitch installation
 if [ ! -d $working_directory/ovs_j ]
 then
+ cd $working_directory
  git clone https://github.com/parkjunhyo/ovs_j.git
  cd $working_directory/ovs_j
  ./soft_kernel_setup.sh 
@@ -59,15 +69,20 @@ fi
 ## installation quagga software router
 LOOPBACK=${LOOPBACK:="192.168.0.2"}
 OSPF_AREA=${OSPF_AREA:='0'}
+echo "[ $(date) $(pwd) ] LOOPBACK IP: $LOOPBACK, OSPF_AREA : $OSPF_AREA" >> $LOGFILE
 if [ ! -d $working_directory/quagga_j ]
 then
+ cd $working_directory
  git clone https://github.com/parkjunhyo/quagga_j.git
  cd $working_directory/quagga_j
  sed -i "s/#*[[:space:]]*hostlo='change_lo'/hostlo="$LOOPBACK"/" $working_directory/quagga_j/netcfg.info
  ./setup.sh
  $(find $working_directory/quagga_j -name Q_telnet.py) enable-ospf $LOOPBACK
- insert_network=$(ip addr show `route | grep -i 'default' | awk '{print $8}'` | grep -i '\<inet\>' | awk '{print $2}')
- $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $insert_network $OSPF_AREA
+ default_iface=`route | grep -i 'default' | awk '{print $8}'`
+ default_network=`ip addr show $(default_iface) | grep -i '\<inet\>' | awk '{print $2}'`
+ echo "[ $(date) $(pwd) ] DEFAULT Interface : $default_iface, DEFAULT NETWORK : $default_network" >> $LOGFILE
+ $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $default_network $OSPF_AREA
+ echo "[ $(date) $(pwd) ] $(cat /etc/quagga/ospfd.conf)" >> $LOGFILE
  cd $working_directory
 fi
 
@@ -88,6 +103,9 @@ IPADDR_C=$(echo $INTERN_GW | awk -F'[.]' '{print $3}')
 ## total private network size
 NATMASK=${NATMASK:='16'}
 INTERN_NATNET=`ipcalc $INTERN_GW/$NATMASK | grep -i 'Network' | awk '{print $2}'`
+echo "[ $(date) $(pwd) ] BREXT : $BREXT, BRINT : $BRINT, INTERNAL NETWORK : $INTER_NETWORK" >> $LOGFILE
+echo "[ $(date) $(pwd) ] INTERNEL GW : $INTERN_GW, INTERNEL_NETMASK : $INTERN_NETMASK, $INTERN_SUBNET" >> $LOGFILE
+echo "[ $(date) $(pwd) ] PRIVATE NAT NETWORK : $INTERN_NATNET" >> $LOGFILE
 if [[ ! `ip link show | grep -i $BREXT` ]]
 then
  ovs-vsctl add-br $BREXT
@@ -114,6 +132,8 @@ then
  echo " pre-up iptables-restore < $working_directory/iptables.rules" >> /etc/network/interfaces
  echo " " >> /etc/network/interfaces
 fi
+echo "[ $(date) $(pwd) ] NETWORK CONFIGURATION : $(cat /etc/network/interfaces)" >> $LOGFILE
+echo "[ $(date) $(pwd) ] IPTABLES RULE : $(iptables -t nat -nvL)" >> $LOGFILE
 #################################################
 
 ## Configuration Change for VMbuilder and Livbrit Option
@@ -165,4 +185,4 @@ then
  cd $working_directory
 fi
 
-
+## Finish the Installation 
