@@ -79,7 +79,7 @@ then
  ./setup.sh
  $(find $working_directory/quagga_j -name Q_telnet.py) enable-ospf $LOOPBACK
  default_iface=`route | grep -i 'default' | awk '{print $8}'`
- default_network=`ip addr show $(default_iface) | grep -i '\<inet\>' | awk '{print $2}'`
+ default_network=`ip addr show $default_iface | grep -i '\<inet\>' | awk '{print $2}'`
  echo "[ $(date) $(pwd) ] DEFAULT Interface : $default_iface, DEFAULT NETWORK : $default_network" >> $LOGFILE
  $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $default_network $OSPF_AREA
  echo "[ $(date) $(pwd) ] $(cat /etc/quagga/zebra.conf)" >> $LOGFILE
@@ -104,7 +104,7 @@ IPADDR_C=$(echo $INTERN_GW | awk -F'[.]' '{print $3}')
 ## total private network size
 NATMASK=${NATMASK:='16'}
 INTERN_NATNET=`ipcalc $INTERN_GW/$NATMASK | grep -i 'Network' | awk '{print $2}'`
-echo "[ $(date) $(pwd) ] BREXT : $BREXT, BRINT : $BRINT, INTERNAL NETWORK : $INTER_NETWORK" >> $LOGFILE
+echo "[ $(date) $(pwd) ] BREXT : $BREXT, BRINT : $BRINT, INTERNAL NETWORK : $INTERN_NETWORK" >> $LOGFILE
 echo "[ $(date) $(pwd) ] INTERNEL GW : $INTERN_GW, INTERNEL_NETMASK : $INTERN_NETMASK, $INTERN_SUBNET" >> $LOGFILE
 echo "[ $(date) $(pwd) ] PRIVATE NAT NETWORK : $INTERN_NATNET" >> $LOGFILE
 if [[ ! `ip link show | grep -i $BREXT` ]]
@@ -133,8 +133,10 @@ then
  echo " pre-up iptables-restore < $working_directory/iptables.rules" >> /etc/network/interfaces
  echo " " >> /etc/network/interfaces
 fi
-echo "[ $(date) $(pwd) ] NETWORK CONFIGURATION : $(cat /etc/network/interfaces)" >> $LOGFILE
-echo "[ $(date) $(pwd) ] IPTABLES RULE : $(iptables -t nat -nvL)" >> $LOGFILE
+echo "[ $(date) $(pwd) ] NETWORK CONFIGURATION : " >> $LOGFILE
+echo "$(cat /etc/network/interfaces)" >> $LOGFILE
+echo "[ $(date) $(pwd) ] IPTABLES RULE : " >> $LOGFILE
+echo "$(iptables -t nat -nvL)" >> $LOGFILE
 #################################################
 
 ## Configuration Change for VMbuilder and Livbrit Option
