@@ -91,6 +91,7 @@ fi
 ## Create the Virtual Network using OPENVSWITCH
 ## Internal Network Creation
 ## This Internal Network will be used for the vm interfaces
+cd $working_directory
 BREXT=${BREXT:='ovsbr_pub'}
 BRINT=${BRINT:='ovsbr_pri'}
 GW_IFACE=$(route | grep -i 'default' | awk '{print $8}')
@@ -119,7 +120,9 @@ fi
 if [[ ! `ip link show | grep -i $BRINT` ]]
 then
  ovs-vsctl add-br $BRINT
- $(find / -name Q_telnet.py) add-ip $BRINT $INTERN_GW/$INTERN_SUBNET
+ cd $working_directory
+ ./quagga_j/Q_telnet.py add-ip $BRINT $INTERN_GW/$INTERN_SUBNET
+ cd $working_directory
  ## Defaullt NAT Rule Creation
  SNAT_IP=`ifconfig $GW_IFACE | grep -i 'inet addr' | awk -F'[ :]' '{print $13}'`
  iptables -t nat -I POSTROUTING -s $INTERN_NETWORK -d $INTERN_NATNET -j ACCEPT
