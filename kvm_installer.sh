@@ -78,10 +78,14 @@ then
  sed -i "s/#*[[:space:]]*hostlo='change_lo'/hostlo="$LOOPBACK"/" $working_directory/quagga_j/netcfg.info
  ./setup.sh
  $(find $working_directory/quagga_j -name Q_telnet.py) enable-ospf $LOOPBACK
+ sleep 3
+ echo "[ $(date) $(pwd) ] $(find $working_directory/quagga_j -name Q_telnet.py) enable-ospf $LOOPBACK" >> $LOGFILE
  default_iface=`route | grep -i 'default' | awk '{print $8}'`
  default_network=`ip addr show $default_iface | grep -i '\<inet\>' | awk '{print $2}'`
  echo "[ $(date) $(pwd) ] DEFAULT Interface : $default_iface, DEFAULT NETWORK : $default_network" >> $LOGFILE
  $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $default_network $OSPF_AREA
+ sleep 3
+ echo "[ $(date) $(pwd) ] $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $default_network $OSPF_AREA" >> $LOGFILE
  echo "[ $(date) $(pwd) ] $(cat /etc/quagga/zebra.conf)" >> $LOGFILE
  echo "[ $(date) $(pwd) ] $(cat /etc/quagga/ospfd.conf)" >> $LOGFILE
  cd $working_directory
@@ -177,15 +181,3 @@ then
 fi
 
 
-## VNC installation processing
-if [[ ! -d $working_directory/vnc_j ]]
-then
- git clone https://github.com/parkjunhyo/vnc_j.git
- cd vnc_j
- ./setup.sh
- ./shutdown_vnc.sh
- ./startvnc.sh
- cd $working_directory
-fi
-
-## Finish the Installation 
