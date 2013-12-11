@@ -82,6 +82,7 @@ then
  default_network=`ip addr show $(default_iface) | grep -i '\<inet\>' | awk '{print $2}'`
  echo "[ $(date) $(pwd) ] DEFAULT Interface : $default_iface, DEFAULT NETWORK : $default_network" >> $LOGFILE
  $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $default_network $OSPF_AREA
+ echo "[ $(date) $(pwd) ] $(cat /etc/quagga/zebra.conf)" >> $LOGFILE
  echo "[ $(date) $(pwd) ] $(cat /etc/quagga/ospfd.conf)" >> $LOGFILE
  cd $working_directory
 fi
