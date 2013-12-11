@@ -77,16 +77,15 @@ then
  cd $working_directory/quagga_j
  sed -i "s/#*[[:space:]]*hostlo='change_lo'/hostlo="$LOOPBACK"/" $working_directory/quagga_j/netcfg.info
  ./setup.sh
- $(find $working_directory/quagga_j -name Q_telnet.py) enable-ospf $LOOPBACK
- sleep 3
- echo "[ $(date) $(pwd) ] $(find $working_directory/quagga_j -name Q_telnet.py) enable-ospf $LOOPBACK" >> $LOGFILE
+ cd $working_directory
+ $working_directory/quagga_j/Q_telnet.py enable-ospf $LOOPBACK
+ echo "[ $(date) $(pwd) ] $working_directory/quagga_j/Q_telnet.py enable-ospf $LOOPBACK" >> $LOGFILE
+ echo "[ $(date) $(pwd) ] $(cat /etc/quagga/ospfd.conf)" >> $LOGFILE
  default_iface=`route | grep -i 'default' | awk '{print $8}'`
  default_network=`ip addr show $default_iface | grep -i '\<inet\>' | awk '{print $2}'`
  echo "[ $(date) $(pwd) ] DEFAULT Interface : $default_iface, DEFAULT NETWORK : $default_network" >> $LOGFILE
- $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $default_network $OSPF_AREA
- sleep 3
- echo "[ $(date) $(pwd) ] $(find $working_directory/quagga_j -name Q_telnet.py) add-ospf-net $default_network $OSPF_AREA" >> $LOGFILE
- echo "[ $(date) $(pwd) ] $(cat /etc/quagga/zebra.conf)" >> $LOGFILE
+ $working_directory/quagga_j/Q_telnet.py add-ospf-net $default_network $OSPF_AREA
+ echo "[ $(date) $(pwd) ] $working_directory/quagga_j/Q_telnet.py add-ospf-net $default_network $OSPF_AREA" >> $LOGFILE
  echo "[ $(date) $(pwd) ] $(cat /etc/quagga/ospfd.conf)" >> $LOGFILE
  cd $working_directory
 fi
